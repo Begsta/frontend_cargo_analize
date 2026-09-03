@@ -14,16 +14,41 @@
           <h1 class="zagolovok-stranicy">Каталог грузов</h1>
         </header>
 
-        <p class="podskazka-filtra">Фильтр по массе груза, т. Пустое поле — все опубликованные.</p>
+        <p class="podskazka-filtra">
+          Фильтр по массе груза, т. Значение 0 — все опубликованные. Число справа обновится после «Отобрать».
+        </p>
         <form class="forma-massy" method="get" action="/">
-          <input
-            type="number"
-            step="1"
-            name="cargo_mass"
-            value="{{ mass_filter }}"
-            placeholder="Масса, т"
-            aria-label="Фильтр по массе груза в тоннах"
-          />
+          <div class="shapka-polzunka">
+            <label for="cargo_mass">Масса, т</label>
+            <output class="znachenie-polzunka" for="cargo_mass">
+              {% if mass_filter != "" %}{{ mass_filter }}{% else %}0.0{% endif %}
+            </output>
+          </div>
+          <div class="obertka-polzunka">
+            <input
+              type="range"
+              id="cargo_mass"
+              name="cargo_mass"
+              min="0"
+              max="10"
+              step="0.1"
+              value="{% if mass_filter != '' %}{{ mass_filter }}{% else %}0{% endif %}"
+              list="metki-massy"
+              aria-label="Фильтр по массе груза в тоннах"
+            />
+          </div>
+          <datalist id="metki-massy">
+            <option value="0" label="0"></option>
+            <option value="2" label="2"></option>
+            <option value="4" label="4"></option>
+            <option value="6" label="6"></option>
+            <option value="8" label="8"></option>
+            <option value="10" label="10"></option>
+          </datalist>
+          <div class="metki-polzunka">
+            <span>0</span>
+            <span>10</span>
+          </div>
           <button type="submit">Отобрать</button>
         </form>
 

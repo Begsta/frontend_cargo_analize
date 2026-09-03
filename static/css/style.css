@@ -356,19 +356,107 @@ textarea.pole-gruza {
 /* —— каталог (плитка) —— */
 .forma-massy {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 10px;
   margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--ramka-knopki);
+  background: var(--zalivka-knopki);
 }
 
-.forma-massy input {
-  flex: 1;
-  border: 1px solid var(--ramka-knopki);
-  padding: 10px 12px;
-  font: inherit;
+.shapka-polzunka {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.shapka-polzunka label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--seriy-tekst);
+}
+
+.znachenie-polzunka {
+  display: inline-block;
+  min-width: 3.2em;
+  text-align: right;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ugol);
+  font-variant-numeric: tabular-nums;
+}
+
+.obertka-polzunka {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 2px 0;
+}
+
+.forma-massy input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.forma-massy input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--ramka-knopki);
+  border: 0;
   border-radius: 0;
 }
 
+.forma-massy input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -8px;
+  background: var(--wolff-krasnyj);
+  border: 2px solid var(--belyj);
+  box-shadow: 0 0 0 1px var(--ramka-knopki);
+  border-radius: 0;
+}
+
+.forma-massy input[type="range"]::-moz-range-track {
+  height: 4px;
+  background: var(--ramka-knopki);
+  border: 0;
+  border-radius: 0;
+}
+
+.forma-massy input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--wolff-krasnyj);
+  border: 2px solid var(--belyj);
+  box-shadow: 0 0 0 1px var(--ramka-knopki);
+  border-radius: 0;
+}
+
+.forma-massy input[type="range"]:focus-visible {
+  outline: 2px solid var(--wolff-krasnyj);
+  outline-offset: 4px;
+}
+
+.metki-polzunka {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--seriy-tekst);
+}
+
 .forma-massy button {
+  width: 100%;
   background: var(--wolff-krasnyj);
   color: var(--belyj);
   border: 0;
