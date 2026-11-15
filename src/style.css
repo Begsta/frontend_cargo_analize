@@ -826,3 +826,42 @@ h1,h2,p,dl,dd {
   height:160px;
   object-fit:cover
 }
+
+/* Лабораторная 6: ожидание AJAX и состояния кнопок. */
+.request-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, .7);
+  color: var(--wolff-krasnyj);
+}
+.request-error {
+  position: relative;
+  z-index: 41;
+  padding: 12px;
+  background: #fff0f0;
+  color: #a40000;
+  overflow-wrap: anywhere;
+}
+button.otmetka-interesa {
+  background: transparent;
+  border: 0;
+}
+button.otmetka-interesa:disabled {
+  cursor: default;
+}
+button.otmetka-interesa[aria-pressed="false"] svg {
+  fill: transparent;
+  stroke: var(--wolff-krasnyj);
+}
+fieldset {
+  min-width: 0;
+}
+.niz-kartochki {
+  flex-wrap: wrap;
+  gap: 4px;
+}

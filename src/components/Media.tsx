@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import type { Cargo } from '../data';
+type MediaCargo = { id: number; name: string; image: string };
 
 export const DEFAULT_IMAGE = '/media/default-cargo.jpg';
 export const DEFAULT_VIDEO = '/media/default.mp4';
 
 type MediaProps = {
-  cargo: Cargo;
+  cargo: MediaCargo;
 };
 
 export function Media({ cargo }: MediaProps) {

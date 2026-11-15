@@ -4,6 +4,8 @@ import { BottomNavigation } from './components/BottomNavigation';
 import { Addition } from './pages/Addition';
 import { Catalog } from './pages/Catalog';
 import { Feed } from './pages/Feed';
+import { Login } from './pages/Login';
+import { RequestStatus } from './components/RequestStatus';
 
 export function App() {
   useEffect(() => {
@@ -12,8 +14,10 @@ export function App() {
 
   return (
     <div className="rama-telefona">
+      <RequestStatus />
       <main>
         <Routes>
+          <Route path="/login" element={<Login />} />
           <Route path="/" element={<Feed />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/cargo/:id" element={<Feed />} />

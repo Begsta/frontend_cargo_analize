@@ -1,42 +1,41 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { CargoCard } from '../components/CargoCard';
 import { CargoFilters } from '../components/CargoFilters';
-import { cargos } from '../data';
+import {
+  useAppDispatch, useAppSelector, massChanged,
+  filterApplied, loadCargos, selectBusy,
+} from '../store/store';
 
 export function Catalog() {
-  const [mass, setMass] = useState(0);
-  const [appliedMass, setAppliedMass] = useState(0);
-  const items = cargos.filter(cargo => cargo.mass >= appliedMass);
-
-  function applyFilter() {
-    setAppliedMass(mass);
-  }
-
-  return (
-    <div className="stranica-s-vkladkami">
-      <header className="shapka-chernovika">
-        <span className="znak-wolff">WOLFF</span>
-        <h1 className="zagolovok-stranicy">Каталог грузов</h1>
-      </header>
-      <p className="podskazka-filtra">
-        Фильтр по массе груза, т. Значение 0 — все опубликованные.
-        Число справа обновится после «Отобрать».
-      </p>
-      <CargoFilters
-        value={mass}
-        onChange={setMass}
-        onApply={applyFilter}
-      />
-      <div className="setka-gruzov">
-        {items.map(cargo => (
-          <CargoCard key={cargo.id} cargo={cargo} />
-        ))}
-      </div>
-      {!items.length && (
-        <p className="empty">
-          Грузы не найдены. Уменьшите массу и нажмите «Отобрать».
-        </p>
-      )}
+  const dispatch = useAppDispatch();
+  const { filters, catalog, user } = useAppSelector(s => s.cargo);
+  const busy = useAppSelector(selectBusy);
+  useEffect(() => {
+    void dispatch(loadCargos());
+  }, [dispatch, filters.appliedMass, user]);
+  return <div className="stranica-s-vkladkami">
+    <header className="shapka-chernovika">
+      <span className="znak-wolff">WOLFF</span>
+      <h1 className="zagolovok-stranicy">Каталог грузов</h1>
+    </header>
+    <p className="podskazka-filtra">
+      Фильтр по массе груза, т. Значение 0 — все опубликованные.
+    </p>
+    <fieldset disabled={busy}>
+      <CargoFilters value={filters.mass}
+        onChange={value => dispatch(massChanged(value))}
+        onApply={() => {
+          dispatch(filterApplied());
+          if (filters.mass === filters.appliedMass) {
+            void dispatch(loadCargos());
+          }
+        }} />
+    </fieldset>
+    <div className="setka-gruzov">
+      {catalog.map(cargo => <CargoCard key={cargo.id} cargo={cargo} />)}
     </div>
-  );
+    {!busy && !catalog.length && <p className="empty">
+      Грузы не найдены.
+    </p>}
+  </div>;
 }

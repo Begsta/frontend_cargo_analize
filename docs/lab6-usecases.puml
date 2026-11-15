@@ -1,0 +1,24 @@
+@startuml
+left to right direction
+actor "Гость" as Guest
+actor "Пользователь" as User
+User --|> Guest
+rectangle "React-интерфейс WOLFF" {
+  usecase "Просматривать каталог" as Catalog
+  usecase "Фильтровать по массе" as Filter
+  usecase "Смотреть видеоленту" as Feed
+  usecase "Войти" as Login
+  usecase "Создать и опубликовать груз" as Add
+  usecase "Поставить / снять лайк" as Like
+  usecase "Удалить свой груз" as Delete
+  usecase "Выйти" as Logout
+}
+Guest -- Catalog
+Guest -- Filter
+Guest -- Feed
+Guest -- Login
+User -- Add
+User -- Like
+User -- Delete
+User -- Logout
+@enduml

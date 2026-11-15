@@ -1,0 +1,1049 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "WOLFF — веб-сервис грузов",
+    "description": "Лабораторная 4: публичное чтение, сессии Redis и cookie. Начните с регистрации и входа через /api/authentication. Методы с замком требуют действующую сессию.",
+    "version": "4.0.0"
+  },
+  "paths": {
+    "/api/cargos": {
+      "get": {
+        "tags": [
+          "Грузы"
+        ],
+        "summary": "Список опубликованных грузов",
+        "description": "Публичное чтение независимо от cookie. Для гостя is_creator=0.",
+        "operationId": "list_cargos_api_cargos_get",
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {}
+        ],
+        "parameters": [
+          {
+            "name": "cargo_mass",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Фильтр: масса в тоннах и больше. 0 или пусто — без фильтра",
+              "title": "Cargo Mass"
+            },
+            "description": "Фильтр: масса в тоннах и больше. 0 или пусто — без фильтра"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CargoOut"
+                  },
+                  "title": "Response List Cargos Api Cargos Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Грузы"
+        ],
+        "summary": "Создать свой черновик",
+        "description": "Нужна сессия. Только название, файл фото и файл видео. Создатель, статус и даты вычисляются на сервере. Файлы — в MinIO.",
+        "operationId": "create_cargo_api_cargos_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_cargo_api_cargos_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CargoOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии"
+          },
+          "403": {
+            "description": "Чужой груз или недопустимый Origin"
+          },
+          "503": {
+            "description": "Redis или хранилище файлов недоступно"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cargos/feed": {
+      "get": {
+        "tags": [
+          "Грузы"
+        ],
+        "summary": "Лента опубликованных грузов",
+        "description": "Без ID — первый груз; с cargo_id — указанный; с next=true — следующий. Для гостя is_liked=0, после входа — личный лайк из сессии.",
+        "operationId": "feed_api_cargos_feed_get",
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {}
+        ],
+        "parameters": [
+          {
+            "name": "cargo_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cargo Id"
+            }
+          },
+          {
+            "name": "next",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Следующий после cargo_id; после последнего — первый",
+              "default": false,
+              "title": "Next"
+            },
+            "description": "Следующий после cargo_id; после последнего — первый"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CargoFeedOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cargos/draft": {
+      "get": {
+        "tags": [
+          "Грузы"
+        ],
+        "summary": "Свой черновик (нужен вход)",
+        "description": "ID пользователя берётся из сессии. Чужие черновики не выдаются.",
+        "operationId": "get_draft_api_cargos_draft_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CargoOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии"
+          },
+          "403": {
+            "description": "Чужой груз или недопустимый Origin"
+          },
+          "503": {
+            "description": "Redis или хранилище файлов недоступно"
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/cargos/{cargo_id}": {
+      "put": {
+        "tags": [
+          "Грузы"
+        ],
+        "summary": "Публикация черновика",
+        "description": "Только свой черновик после входа. Описание, масса и объём необязательны.",
+        "operationId": "publish_cargo_api_cargos__cargo_id__put",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cargo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Cargo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/CargoPublishIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CargoOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии"
+          },
+          "403": {
+            "description": "Чужой груз или недопустимый Origin"
+          },
+          "503": {
+            "description": "Redis или хранилище файлов недоступно"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Грузы"
+        ],
+        "summary": "Мягкое удаление своего груза",
+        "description": "После входа. Своему грузу присваивается deleted; чужой изменить нельзя.",
+        "operationId": "delete_cargo_api_cargos__cargo_id__delete",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cargo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Cargo Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Нет действующей сессии"
+          },
+          "403": {
+            "description": "Чужой груз или недопустимый Origin"
+          },
+          "503": {
+            "description": "Redis или хранилище файлов недоступно"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cargos/{cargo_id}/likes": {
+      "post": {
+        "tags": [
+          "Грузы"
+        ],
+        "summary": "Отметка интереса текущего пользователя",
+        "description": "После входа. interest=1 ставит лайк, 0 снимает. Пользователь берётся из сессии.",
+        "operationId": "set_like_api_cargos__cargo_id__likes_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cargo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Cargo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LikeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LikeOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии"
+          },
+          "403": {
+            "description": "Чужой груз или недопустимый Origin"
+          },
+          "503": {
+            "description": "Redis или хранилище файлов недоступно"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "post": {
+        "tags": [
+          "Пользователи"
+        ],
+        "summary": "Регистрация",
+        "description": "Создаёт пользователя с паролем 8–128 символов. Пароль хранится как Argon2id-хеш. Для входа вызовите authentication.",
+        "operationId": "register_user_api_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRegisterIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Логин уже занят"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/authentication": {
+      "post": {
+        "tags": [
+          "Пользователи"
+        ],
+        "summary": "Вход: сессия и cookie",
+        "description": "Проверяет логин/пароль, создаёт сессию в Redis и устанавливает HttpOnly cookie session_id. Повторный вход заменяет сессию этой cookie. Swagger на этом же адресе автоматически отправляет полученную cookie.",
+        "operationId": "authenticate_api_authentication_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthenticationIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Неверный логин или пароль"
+          },
+          "503": {
+            "description": "Redis недоступен"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/deauthentication": {
+      "post": {
+        "tags": [
+          "Пользователи"
+        ],
+        "summary": "Выход: удалить сессию",
+        "description": "Удаляет сессию из Redis и cookie браузера. Повторный выход без cookie тоже возвращает 204.",
+        "operationId": "deauthenticate_api_deauthentication_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "503": {
+            "description": "Redis недоступен; отзыв сессии не подтверждён"
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {}
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuthenticationIn": {
+        "properties": {
+          "user_login": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "User Login"
+          },
+          "user_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "format": "password",
+            "title": "User Password",
+            "writeOnly": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "user_login",
+          "user_password"
+        ],
+        "title": "AuthenticationIn"
+      },
+      "AuthenticationOut": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserOut"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Срок действия сессии в секундах"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "expires_in"
+        ],
+        "title": "AuthenticationOut"
+      },
+      "Body_create_cargo_api_cargos_post": {
+        "properties": {
+          "cargo_name": {
+            "type": "string",
+            "title": "Cargo Name"
+          },
+          "image": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Image"
+          },
+          "video": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Video"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cargo_name",
+          "image",
+          "video"
+        ],
+        "title": "Body_create_cargo_api_cargos_post"
+      },
+      "CargoFeedOut": {
+        "properties": {
+          "cargo_id": {
+            "type": "integer",
+            "title": "Cargo Id"
+          },
+          "cargo_name": {
+            "type": "string",
+            "title": "Cargo Name"
+          },
+          "cargo_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cargo Description"
+          },
+          "publication_status": {
+            "type": "string",
+            "title": "Publication Status"
+          },
+          "image_url": {
+            "type": "string",
+            "title": "Image Url"
+          },
+          "video_url": {
+            "type": "string",
+            "title": "Video Url"
+          },
+          "image_public_url": {
+            "type": "string",
+            "title": "Image Public Url"
+          },
+          "video_public_url": {
+            "type": "string",
+            "title": "Video Public Url"
+          },
+          "cargo_mass": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cargo Mass"
+          },
+          "cargo_volume": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cargo Volume"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "formed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Formed At"
+          },
+          "creator_user_id": {
+            "type": "integer",
+            "title": "Creator User Id"
+          },
+          "is_creator": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ],
+            "title": "Is Creator"
+          },
+          "interest_marks": {
+            "type": "integer",
+            "title": "Interest Marks"
+          },
+          "is_liked": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ],
+            "title": "Is Liked",
+            "description": "1 — текущий пользователь поставил лайк, 0 — не поставил"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cargo_id",
+          "cargo_name",
+          "cargo_description",
+          "publication_status",
+          "image_url",
+          "video_url",
+          "image_public_url",
+          "video_public_url",
+          "cargo_mass",
+          "cargo_volume",
+          "created_at",
+          "formed_at",
+          "creator_user_id",
+          "is_creator",
+          "interest_marks",
+          "is_liked"
+        ],
+        "title": "CargoFeedOut",
+        "description": "В ленте показываем личный лайк отдельно от общего числа отметок."
+      },
+      "CargoOut": {
+        "properties": {
+          "cargo_id": {
+            "type": "integer",
+            "title": "Cargo Id"
+          },
+          "cargo_name": {
+            "type": "string",
+            "title": "Cargo Name"
+          },
+          "cargo_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cargo Description"
+          },
+          "publication_status": {
+            "type": "string",
+            "title": "Publication Status"
+          },
+          "image_url": {
+            "type": "string",
+            "title": "Image Url"
+          },
+          "video_url": {
+            "type": "string",
+            "title": "Video Url"
+          },
+          "image_public_url": {
+            "type": "string",
+            "title": "Image Public Url"
+          },
+          "video_public_url": {
+            "type": "string",
+            "title": "Video Public Url"
+          },
+          "cargo_mass": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cargo Mass"
+          },
+          "cargo_volume": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cargo Volume"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "formed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Formed At"
+          },
+          "creator_user_id": {
+            "type": "integer",
+            "title": "Creator User Id"
+          },
+          "is_creator": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ],
+            "title": "Is Creator"
+          },
+          "interest_marks": {
+            "type": "integer",
+            "title": "Interest Marks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cargo_id",
+          "cargo_name",
+          "cargo_description",
+          "publication_status",
+          "image_url",
+          "video_url",
+          "image_public_url",
+          "video_public_url",
+          "cargo_mass",
+          "cargo_volume",
+          "created_at",
+          "formed_at",
+          "creator_user_id",
+          "is_creator",
+          "interest_marks"
+        ],
+        "title": "CargoOut",
+        "description": "Ответ клиенту. Системные поля только для чтения."
+      },
+      "CargoPublishIn": {
+        "properties": {
+          "cargo_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cargo Description"
+          },
+          "cargo_mass": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cargo Mass"
+          },
+          "cargo_volume": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cargo Volume"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CargoPublishIn",
+        "description": "Необязательные характеристики, заполняемые после создания черновика."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LikeIn": {
+        "properties": {
+          "interest": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ],
+            "title": "Interest",
+            "description": "0 — снять лайк, 1 — поставить"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "interest"
+        ],
+        "title": "LikeIn",
+        "description": "0 снимает отметку интереса, 1 ставит. Автор берётся из сессии."
+      },
+      "LikeOut": {
+        "properties": {
+          "cargo_id": {
+            "type": "integer",
+            "title": "Cargo Id"
+          },
+          "interest": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ],
+            "title": "Interest"
+          },
+          "interest_marks": {
+            "type": "integer",
+            "title": "Interest Marks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cargo_id",
+          "interest",
+          "interest_marks"
+        ],
+        "title": "LikeOut"
+      },
+      "UserOut": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "user_login": {
+            "type": "string",
+            "title": "User Login"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "user_login",
+          "user_name"
+        ],
+        "title": "UserOut"
+      },
+      "UserRegisterIn": {
+        "properties": {
+          "user_login": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "User Login"
+          },
+          "user_name": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "User Name"
+          },
+          "user_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "format": "password",
+            "title": "User Password",
+            "writeOnly": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "user_login",
+          "user_name",
+          "user_password"
+        ],
+        "title": "UserRegisterIn"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "SessionCookie": {
+        "type": "apiKey",
+        "description": "Cookie из POST /api/authentication. В Swagger сначала выполните вход: браузер сохранит HttpOnly cookie автоматически.",
+        "in": "cookie",
+        "name": "session_id"
+      }
+    }
+  }
+}

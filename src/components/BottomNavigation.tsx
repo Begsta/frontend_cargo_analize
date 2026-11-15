@@ -1,5 +1,10 @@
 import { Navbar } from 'react-bootstrap';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { http, errorMessage } from '../api/http';
+import {
+  authStarted, authFinished, authFailed, selectBusy,
+  useAppDispatch, useAppSelector,
+} from '../store/store';
 
 type TabIconProps = {
   kind: 'feed' | 'add' | 'grid' | 'login';
@@ -38,24 +43,50 @@ function TabIcon({ kind }: TabIconProps) {
 }
 
 export function BottomNavigation() {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const user = useAppSelector(state => state.cargo.user);
+  const busy = useAppSelector(selectBusy);
+  async function logout() {
+    if (busy) return;
+    dispatch(authStarted());
+    try {
+      await http.post('/api/deauthentication');
+      dispatch(authFinished(null));
+      navigate('/catalog');
+    } catch (error) {
+      dispatch(authFailed(errorMessage(error)));
+    }
+  }
   return (
     <Navbar className="panel-vkladok-podyoma">
       <NavLink className="vkladka-podyoma" to="/" end>
         <TabIcon kind="feed" />
         <span>Лента</span>
       </NavLink>
-      <button className="vkladka-podyoma" disabled>
-        <TabIcon kind="add" />
-        <span>Добавление</span>
-      </button>
+      {user ? (
+        <NavLink className="vkladka-podyoma" to="/cargo_addition">
+          <TabIcon kind="add" /><span>Добавление</span>
+        </NavLink>
+      ) : (
+        <button className="vkladka-podyoma" disabled>
+          <TabIcon kind="add" /><span>Добавление</span>
+        </button>
+      )}
       <NavLink className="vkladka-podyoma" to="/catalog">
         <TabIcon kind="grid" />
         <span>Плитка</span>
       </NavLink>
-      <button className="vkladka-podyoma" disabled>
-        <TabIcon kind="login" />
-        <span>Вход</span>
-      </button>
+      {user ? (
+        <button className="vkladka-podyoma" onClick={logout}
+          disabled={busy}>
+          <TabIcon kind="login" /><span>Выход</span>
+        </button>
+      ) : (
+        <NavLink className="vkladka-podyoma" to="/login">
+          <TabIcon kind="login" /><span>Вход</span>
+        </NavLink>
+      )}
     </Navbar>
   );
 }
